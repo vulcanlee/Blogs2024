@@ -1,5 +1,7 @@
 # Elasticsearch 系列 : 建立與使用 Docker 環境下的 Elasticsearch 與 Kibana
 
+![](../Images/cs2024-9977.png)
+
 由於最近半年都在從事於 Elasticsearc 方面的專案開發，因為工作上的需要，因此將會把最近用於 Elasticsearc 相關開發技術與方法記錄下來，方便日後查詢，也讓更多人可以認識這個相當優異的工具，以及如何透過 C# 最到相關的應用。
 
 底下為 2023 所撰寫的關於 Elasticsearch 的文章清單
