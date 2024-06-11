@@ -75,7 +75,7 @@
 
 稍微等候一下，這個 Blazor Web App 專案將會建立完成
 
-## Program.cs
+## Program.cs - Blazor 專案程式進入點
 
 現在依序從程式進入點的 `Program.cs` 檔案中，了解到關於 Blazor SSR 的設定方式
 
@@ -117,11 +117,84 @@ app.Run();
 
 最後的 `app.Run();` 方法將會啟動這個 Blazor 應用程式。此時，這個 Web 專案將會啟動起來。
 
+## App.razor - Blazor 應用程式的根元件
 
+從 [Components] 資料夾內找到並且打開 [App.razor] 這個檔案，就會看到底下內容
 
+```html
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="csBlazorSSR.styles.css" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <HeadOutlet />
+</head>
 
+<body>
+    <Routes />
+    <script src="_framework/blazor.web.js"></script>
+</body>
 
+</html>
+```
+
+從這個  [App.razor] 檔案中可以看出，這是一個相當簡單的 HTML5 的頁面，這個頁面中包含了一個 `<head>` 標籤和一個 `<body>` 標籤，這個頁面中還包含了一個 `<Routes />` 元件，這個元件將會用來顯示路由的內容。而在 `<head>` 標籤中，還包含了一個 `<HeadOutlet />` 元件，這個元件將會用來轉譯 PageTitle 和 HeadContent 元件提供的內容。
+
+若執行這個專案之後，首先將會路由到 [Home] 頁面，現在可以查看該網頁的原始碼，可以得到底下的 `<head>` 區段的內容。
+
+```html
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="/">
+  <link rel="stylesheet" href="bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="csBlazorSSR.styles.css">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <title>Home</title>
+</head>
+```
+
+在這個操作例子中，可以看到 `<HeadOutlet />` 元件，將會被替換成為 `<title>Home</title>`。而網頁的標題將會被設定為 [Home]，如下圖
+
+![](../Images/cs2024-9973.png)
+
+現在切換到 [Weather] 頁面，可以看到網頁的標題將會被設定為 [Weather Forecast]，此時查看該頁面原始碼，就會看到原先的 `<title>Home</title>` 變成了 `<title>Weather</title>`，如下圖
+
+![](../Images/cs2024-9972.png)
+
+這樣的設計方式，將會讓 Blazor 應用程式的開發者可以更加靈活的設定網頁的標題，這樣的設計方式將會讓 Blazor 應用程式的開發者可以更加靈活的設定網頁的標題。
+
+而對於 `<Routes />` ，這是一個 Blazor 的 Razor 元件，這個元件將會用來顯示路由的內容，這個元件將會根據瀏覽器的 URL 來決定要顯示的 Razor 元件。
+
+## Routes.razor - Blazor 路由元件
+
+在 [Components] 資料夾內找到並且打開 [Routes.razor] 這個檔案，就會看到底下內容
+
+```html
+<Router AppAssembly="typeof(Program).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>
+```
+
+`<Router AppAssembly="typeof(Program).Assembly">` ： `Router` 組件是 Blazor 中用來處理路由的組件。`AppAssembly` 屬性指定了應用程式的主要程式集，Blazor 會在這個程式集中尋找路由定義。`typeof(Program).Assembly` 表示應用程式的主程式集，即通常包含路由定義的程式集。
+
+`<Found Context="routeData">` ： `Found` 是 `Router` 組件的子組件之一，用來處理找到匹配路由的情況。`Context` 屬性定義了一個變數物件（這裡是 `routeData`），這個變數會包含匹配路由的相關資料。
+
+`<RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />` ： `RouteView` 是一個用來呈現匹配路由組件的組件。 `RouteData`：這個屬性將 `Found` 組件中的 `routeData` 傳遞給 `RouteView`，用來告訴 `RouteView` 應該呈現哪個組件。 `DefaultLayout`：指定一個預設的版面配置。這裡使用了 `typeof(Layout.MainLayout)`，表示當匹配的組件沒有明確指定版面配置時，會使用 `MainLayout` 這個版面配置。
+
+`<FocusOnNavigate RouteData="routeData" Selector="h1" />` ： `FocusOnNavigate` 是一個自定義的組件，用來在導航後設定焦點。 `RouteData`：同樣地，將 `routeData` 傳遞給 `FocusOnNavigate`，用來觸發導航事件。 `Selector`：指定一個 CSS 選擇器，`FocusOnNavigate` 會在導航後將焦點設定到符合這個選擇器的元素上。這裡的 `h1` 表示導航後會將焦點設定到第一個 `<h1>` 元素上。
+
+這段程式碼定義了 Blazor 應用程式的路由邏輯。當使用者導航到一個 URL 時，`Router` 組件會在指定的程式集中尋找匹配的路由。如果找到匹配的路由，`Found` 組件會將 `routeData` 傳遞給 `RouteView` 和 `FocusOnNavigate`。`RouteView` 負責呈現匹配的組件，並且應用指定的版面配置（如果匹配的組件沒有指定版面配置，則使用預設的 `MainLayout`）。`FocusOnNavigate` 則負責在導航後將焦點設定到指定的元素上，這裡是將焦點設定到第一個 `<h1>` 元素。
 
 
 
