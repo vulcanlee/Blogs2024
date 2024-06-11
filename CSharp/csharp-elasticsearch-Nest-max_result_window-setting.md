@@ -1,0 +1,1 @@
+# Elasticsearch 系列 : 如何使用 C# / NEST 來變更 index.max_result_window 大小
