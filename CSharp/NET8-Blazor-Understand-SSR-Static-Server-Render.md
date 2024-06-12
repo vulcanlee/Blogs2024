@@ -196,8 +196,24 @@ app.Run();
 
 這段程式碼定義了 Blazor 應用程式的路由邏輯。當使用者導航到一個 URL 時，`Router` 組件會在指定的程式集中尋找匹配的路由。如果找到匹配的路由，`Found` 組件會將 `routeData` 傳遞給 `RouteView` 和 `FocusOnNavigate`。`RouteView` 負責呈現匹配的組件，並且應用指定的版面配置（如果匹配的組件沒有指定版面配置，則使用預設的 `MainLayout`）。`FocusOnNavigate` 則負責在導航後將焦點設定到指定的元素上，這裡是將焦點設定到第一個 `<h1>` 元素。
 
+## 觀察 SSR 靜態伺服器渲染模式
 
+現在再次執行這個專案，接著，開啟無痕視窗
 
+按下 F12 按鍵，進入到開發人員模式，切換到 [Network] 標籤頁次，接著在網址列輸入 `https://localhost:7193/`，就會看到底下的畫面
 
+![](../Images/cs2024-9971.png)
 
+然後按下 Enter 鍵之後，觀察 [Network] 標籤頁次，可以看到底下的畫面
 
+![](../Images/cs2024-9970.png)
+
+![](../Images/cs2024-9969.png)
+
+在 [Network] 標籤頁次中，觀察到第一個請求是 `https://localhost:7193/`，這個請求是用來下載首頁的 HTML 內容，這與傳統的 ASP.NET Core MVC 或者 ASP.NET Core Razor Page 一樣，所有的 HTML 內容都是在後端伺服器中產生出來，透過 HTTP 通訊協定 Response 回應到瀏覽器用戶端上，接著，瀏覽器會將這些 HTML 渲染到瀏覽器畫面上。
+
+現在，在瀏覽器畫面上，點選 [Weather] 頁面，觀察 [Network] 標籤頁次，可以看到底下的畫面
+
+![](../Images/cs2024-9968.png)
+
+此時將會看到送出一個 GET `https://localhost:7193/weather` URL 請求，這個請求是用來下載 Weather 頁面的 HTML 內容，不過，這次所送出的類型並不是 [document] 而是 [fetch] ，這是 .NET 8 Blazor SSR 推出的新功能，這裡僅會取得 Weather 更新後的 HTML 內容，將這些內容渲染到瀏覽器網頁上，因此，無須重新全部載入所有網頁、css、javascrit 檔案，可以提升運行速度。
