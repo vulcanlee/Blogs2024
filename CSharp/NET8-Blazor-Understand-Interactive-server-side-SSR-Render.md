@@ -88,7 +88,6 @@ namespace csBlazorInteractiveSSR
 }
 ```
 
-
 ## App.razor - Blazor 應用程式的根元件
 
 從 [Components] 資料夾內找到並且打開 [App.razor] 這個檔案，就會看到底下內容
