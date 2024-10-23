@@ -1,5 +1,7 @@
 # AOAI 2.0 : 第一次使用 Azure.AI.OpenAI 2.0.0 開發教學
 
+![](../Images/cs2024-9928.png)
+
 在 2024/10/01 微軟宣布 [Azure.AI.OpenAI 2.0.0](https://devblogs.microsoft.com/azure-sdk/announcing-the-stable-release-of-the-azure-openai-library-for-net/) 正式發布，這是一個重大的里程碑，因為這是一個全新的版本，並且有許多新功能和改進。在此之前，所使用的 Azure OpenAI client library for .NET 套件都是 Beta 版本，而在此正式版堆出之後，將會有一些使用方式的改變與增加許多功能，所以，將會針對這些 Azure OpenAI client library for .NET 2.0 版本進行一系列的教學。
 
 在這裡先要來了解 AOAI 採用的是大語言模型技術，使用者可以傳入文字，透過大語言模型的處理，就會生成出一段回應文字，這樣的技術可以應用在許多場景，例如：對話式應用程式、自動回覆、自動翻譯、自動摘要、自動生成程式碼等等。
