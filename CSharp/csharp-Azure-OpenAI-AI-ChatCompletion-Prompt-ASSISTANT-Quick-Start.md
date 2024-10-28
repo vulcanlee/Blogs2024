@@ -1,4 +1,4 @@
-# AOAI 2.0 : 第一次使用 Azure.AI.OpenAI 2.0.0 開發教學
+# Azure OpenAI AOAI 2.0 : 1 第一次使用 Azure.AI.OpenAI 2.0.0 開發教學
 
 ![](../Images/cs2024-9928.png)
 
