@@ -159,3 +159,259 @@
 * 滑鼠右擊 [Auths] 資料夾
 * 選擇 [加入] > [Razor 元件] 功能表選項
 * 將此新元件命名為 [Login.razor]
+* 使用底下代碼替換掉掉這個檔案中的內容
+
+```html
+@page "/Auths/Login"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+@using csBlazorLogin.Components.Layout
+
+@layout EmptyLayout
+@inject ILogger<Login> Logger
+
+@inject NavigationManager NavigationManager
+
+<PageTitle>身分驗證</PageTitle>
+
+<div class="row">
+    <div class="col-md-4">
+        <section>
+            <div class="alert alert-danger" role="alert">
+                @errorMessage
+            </div>
+
+            <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+                <DataAnnotationsValidator />
+                <h2>請輸入帳號與密碼以進行身分驗證</h2>
+                <hr />
+                <ValidationSummary class="text-danger" role="alert" />
+                <div class="form-floating mb-3">
+                    <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                    <label for="email" class="form-label">Email</label>
+                    <ValidationMessage For="() => Input.Email" class="text-danger" />
+                </div>
+                <div class="form-floating mb-3">
+                    <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                    <label for="password" class="form-label">Password</label>
+                    <ValidationMessage For="() => Input.Password" class="text-danger" />
+                </div>
+                <div class="checkbox mb-3">
+                    <label class="form-label">
+                        <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
+                        Remember me
+                    </label>
+                </div>
+                <div>
+                    <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+                </div>
+                <div>
+                    <p>
+                        <a href="Account/ForgotPassword">Forgot your password?</a>
+                    </p>
+                    <p>
+                        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register as a new user</a>
+                    </p>
+                    <p>
+                        <a href="Account/ResendEmailConfirmation">Resend email confirmation</a>
+                    </p>
+                </div>
+            </EditForm>
+        </section>
+    </div>
+</div>
+
+@code {
+    string errorMessage = string.Empty;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            Logger.LogInformation("Cookie : Login: OnInitializedAsync Need SignOut");
+            // Clear the existing external cookie to ensure a clean login process
+            // await HttpContext.SignOutAsync("CookieAuthenticationScheme");
+        }
+        else
+        {
+            Logger.LogInformation("Cookie : Login: OnInitializedAsync No SignOut");
+        }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        if (firstRender)
+        {
+            NavigationManager.NavigateTo("/Auths/Login", forceLoad: true);
+        }
+    }
+
+    public async Task LoginUser()
+    {
+
+        #region 加入這個使用者需要用到的 宣告類型 Claim Type
+        var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Role, "User"),
+                    new Claim(ClaimTypes.NameIdentifier, Input.Email),
+                };
+        #endregion
+
+        #region 建立 宣告式身分識別
+        // ClaimsIdentity類別是宣告式身分識別的具體執行, 也就是宣告集合所描述的身分識別
+        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        #endregion
+
+        #region 建立關於認證階段需要儲存的狀態
+        string returnUrl = string.IsNullOrEmpty(ReturnUrl) ? "/" : ReturnUrl;
+        var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = true,
+                RedirectUri = returnUrl,
+            };
+        #endregion
+
+        #region 進行使用登入
+        try
+        {
+            await HttpContext.SignInAsync(
+                "CookieAuthenticationScheme",
+            new ClaimsPrincipal(claimsIdentity),
+            authProperties);
+            // NavigationManager.NavigateTo("/weather", forceLoad:true);
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.Message;
+        }
+        #endregion
+
+
+    }
+
+    private sealed class InputModel
+    {
+        // [Required]
+        // [EmailAddress]
+        public string Email { get; set; } = "";
+
+        // [Required]
+        // [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [Display(Name = "Remember me?")]
+        public bool RememberMe { get; set; }
+    }
+}
+```
+
+在這個頁面，若使用者輸入完成帳號與密碼，點選 [Log in] 按鈕之後，將會觸發 [LoginUser] 方法，這個方法將會進行使用者的登入處理，這個方法將會進行使用者的身分驗證，並且進行使用者的登入處理。
+
+不過，此時並不是採用 Client 端或者伺服器端的渲染，而是將使用者輸入的帳密，透過 HTTP POST 方法送至伺服器端，這樣的設計，如此，當使用者身分驗證成功之後，就可以將使用者身分資訊，透過 Cookie 的方式，傳送到用戶端的瀏覽器內。
+
+![](../Images/cs2024-9876.png)
+
+從下圖中，可以看到伺服器端有透過 Cookie 來傳送相關的 Role & Claim 資訊給用戶端的瀏覽器內。
+
+![](../Images/cs2024-9875.png)
+
+* 滑鼠右擊 [專案節點] > [Components] 資料夾
+* 選擇 [加入] > [新增資料夾] 功能表選項
+* 將此新資料夾命名為 [Auths]
+* 滑鼠右擊 [Auths] 資料夾
+* 選擇 [加入] > [Razor 元件] 功能表選項
+* 將此新元件命名為 [Logout.razor]
+* 使用底下代碼替換掉掉這個檔案中的內容
+
+```html
+@page "/Auths/Logout"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+@using csBlazorLogin.Components.Layout
+
+@layout EmptyLayout
+@inject ILogger<Login> Logger
+
+@inject NavigationManager NavigationManager
+
+<PageTitle>登出</PageTitle>
+
+@code {
+    string errorMessage = string.Empty;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await HttpContext.SignOutAsync("CookieAuthenticationScheme");
+        NavigationManager.NavigateTo("/Auths/Login", forceLoad:true);
+    }
+}
+```
+
+這個頁面邏輯就相當單純多了，一旦要顯示這個畫面的時候，就會立即進行使用者的登出處理，這裡使用了 `await HttpContext.SignOutAsync("CookieAuthenticationScheme");` 敘述，這樣的設計，可以讓使用者在登出之後，可以立即回到登入頁面。
+
+## 修正 MainLayout.razor
+
+* 找到 [專案節點] > [Components] > [Layout] 資料夾
+* 開啟 `MainLayout.razor` 檔案
+* 找到 `<main>` 標籤
+* 在其下方加入底下標籤宣告
+
+```html
+<div @onclick="GoLoginPage" class="px-3">
+    Login
+</div>
+```
+
+* 在最下面加入底下的程式碼
+
+```html
+
+@code {
+    private void GoLoginPage(MouseEventArgs e)
+    {
+        NavigationManager.NavigateTo("Auths/Login", true);
+    }
+}
+```
+
+一旦使用者點選了 [Login] 這個按鈕之後，就會立即導向到登入頁面，這樣的設計，可以讓使用者可以立即進行登入的操作。
+
+## 修正 Program.cs
+
+* 在 [專案節點] ，找到並且打開 `Program.cs` 檔案
+* 找到 `.AddInteractiveServerComponents();` 這一行
+* 在其下方加入底下的程式碼
+
+```csharp
+builder.Services.AddCascadingAuthenticationState();
+
+builder.Services.AddAuthentication("CookieAuthenticationScheme")
+.AddCookie("CookieAuthenticationScheme");
+```
+
+這樣的設計，可以讓我們的 Blazor 應用程式，可以透過 Cookie 來儲存使用者的身分驗證資訊，這樣的設計，可以讓我們的應用程式可以進行使用者的登入與登出操作。
+
+這個 [AddCascadingAuthenticationState] 方法，將會註冊串聯驗證狀態服務，這樣的設計，可以讓我們的 Blazor 應用程式，可以透過串聯驗證狀態服務，來取得使用者的身分驗證資訊。
+
+這個 [AddAuthentication] 與 [AddCookie] 方法，將會註冊 Cookie 驗證服務，這樣的設計，可以讓我們的 Blazor 應用程式，可以透過 Cookie 來儲存使用者的身分驗證資訊。
